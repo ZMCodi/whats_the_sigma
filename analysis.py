@@ -114,10 +114,25 @@ def portfolio_for_volatility(rets_df: pd.DataFrame, target_vol: float):
     idx = find_nearest(t_vols, target_vol)
     return weights[idx]
 
+def results(payload) -> list[tuple[str, float]]:
+    # Get the log returns
+    close = get_close(payload['tickers'], payload['start_date'], payload['end_date'])
+    rets_df = get_log_rets(close)
+
+    # Get the weights for the target volatility
+    weights = portfolio_for_volatility(rets_df, payload['target_vol'])
+
+    # Return formatted results
+    return[(ticker, float(weight)) for ticker, weight in zip(rets_df.columns, weights) if weight > 1e-5]
+
 if __name__ == "__main__":
     # Example usage
-    tickers = ['AAPL', 'MSFT', 'NVDA']
+    tickers = ['AAPL', 'MSFT', 'NVDA', 'TSLA', 'AMZN', 'GOOGL', 'META', 'NFLX']
     df = get_close(tickers, '2023-01-01', '2025-01-01')
-    log_rets = get_log_rets(df)
-    print(get_returns_range(log_rets))
+    print(results({
+        'tickers': tickers,
+        'start_date': '2023-01-01',
+        'end_date': '2025-01-01',
+        'target_vol': 0.2
+    }))
     # print(get_returns_range(log_rets))
