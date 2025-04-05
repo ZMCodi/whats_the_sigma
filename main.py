@@ -3,6 +3,8 @@ import os
 from dotenv import load_dotenv
 import requests
 
+from analysis import create_portfolio
+
 load_dotenv()
  
 URL = "mts-prism.com"
@@ -100,6 +102,8 @@ if not success:
 print(f"Context provided: ", context)
  
 # Maybe do something with the context to generate this?
+payload = create_payload(context)
+portfolio = create_portfolio(payload)
 # portfolio = [("AAPL", 1), ("MSFT", 1), ("NVDA", 1), ("PFE", 1)]
  
 # success, response = send_portfolio(portfolio)

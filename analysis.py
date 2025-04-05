@@ -119,7 +119,7 @@ def portfolio_for_volatility(rets_df: pd.DataFrame, target_vol: float):
 def shares_for_price(ticker: str, close_df: pd.DataFrame, price: float) -> float:
     return float(price / close_df[ticker].iloc[0])
 
-def results(payload: dict) -> list[tuple[str, float]]:
+def create_portfolio(payload: dict) -> list[tuple[str, float]]:
     # Get the log returns
     close = get_close(payload['tickers'], payload['start_date'], payload['end_date'])
     rets_df = get_log_rets(close)
@@ -134,7 +134,7 @@ def results(payload: dict) -> list[tuple[str, float]]:
 if __name__ == "__main__":
     # Example usage
     tickers = ['AAPL', 'ETSY', 'NVDA', 'TSLA', 'PYPL', 'GOOGL']
-    print(results({
+    print(create_portfolio({
         'tickers': tickers,
         'start_date': '2019-08-09',
         'end_date': '2022-02-14',
