@@ -4,8 +4,7 @@ from dotenv import load_dotenv
 import requests
 
 from analysis import create_portfolio
-from lms import extract_investment_profile, create_payload
-from risk_eval import risk_eval
+from lms import create_payload
 
 load_dotenv()
  
@@ -124,53 +123,37 @@ if __name__ == '__main__':
     #     except Exception as e:
     #         continue
 
-    success, information = get_my_current_information()
-    if not success:
-        print(f"Error: {information}")
-    print(f"Team information: ", information)
+    # success, information = get_my_current_information()
+    # if not success:
+    #     print(f"Error: {information}")
+    # print(f"Team information: ", information)
 
-    success, context = get_context()
-    if not success:
-        print(f"Error: {context}")
-    print(f"Context provided: ", context)
-    # context = "Tina Wu is 62 years old and has an investment start date of February 21st 2015 and an investment end date of March 18th 2017. Her hobbies include bird watching and she avoids life sciences. She has a total budget of $73208 for her investment."
+    # success, context = get_context()
+    # if not success:
+    #     print(f"Error: {context}")
+    # print(f"Context provided: ", context)
+    context = "Alejandro Campbell is a 60-year-old who started investing on October 20th, 2008 and ended on January 21st, 2010. His hobbies are gardening and he avoids Tech stocks. He has a total budget of $942."
 
     # Maybe do something with the context to generate this?
-    investment_profile = extract_investment_profile(context)
+    payload = create_payload(context)
+    print("Payload: ", payload)
     # print(type(investment_profile))
-    risk_payload = risk_eval(investment_profile)
-    # print("Risk payload: ", risk_payload)
-    payload = create_payload(risk_payload)
     portfolio = create_portfolio(payload)
     print(portfolio)
     # portfolio = [("AAPL", 1), ("MSFT", 1), ("NVDA", 1), ("PFE", 1)]
 
-    success, response = send_portfolio(portfolio)
-    if not success:
-        print(f"Error: {response}")
-    print(f"Evaluation response: ", response)
-    success, information = get_my_current_information()
-    if not success:
-        print(f"Error: {information}")
-    print(f"Team information: ", information)
+    # success, response = send_portfolio(portfolio)
+    # if not success:
+    #     print(f"Error: {response}")
+    # print(f"Evaluation response: ", response)
+    # success, information = get_my_current_information()
+    # if not success:
+    #     print(f"Error: {information}")
+    # print(f"Team information: ", information)
 
-    success, context = get_context()
-    if not success:
-        print(f"Error: {context}")
-    print(f"Context provided: ", context)
+    # success, context = get_context()
+    # if not success:
+    #     print(f"Error: {context}")
+    # print(f"Context provided: ", context)
     # context = "Tina Wu is 62 years old and has an investment start date of February 21st 2015 and an investment end date of March 18th 2017. Her hobbies include bird watching and she avoids life sciences. She has a total budget of $73208 for her investment."
 
-    # Maybe do something with the context to generate this?
-    investment_profile = extract_investment_profile(context)
-    # print(type(investment_profile))
-    risk_payload = risk_eval(investment_profile)
-    # print("Risk payload: ", risk_payload)
-    payload = create_payload(risk_payload)
-    portfolio = create_portfolio(payload)
-    print(portfolio)
-    # portfolio = [("AAPL", 1), ("MSFT", 1), ("NVDA", 1), ("PFE", 1)]
-
-    success, response = send_portfolio(portfolio)
-    if not success:
-        print(f"Error: {response}")
-    print(f"Evaluation response: ", response)
