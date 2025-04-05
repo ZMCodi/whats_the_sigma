@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 import requests
 
 from analysis import create_portfolio
+from lms import extract_investment_profile, create_payload
+from risk_eval import risk_eval
 
 load_dotenv()
  
@@ -102,8 +104,11 @@ if not success:
 print(f"Context provided: ", context)
  
 # Maybe do something with the context to generate this?
-# payload = create_payload(context)
-# portfolio = create_portfolio(payload)
+investment_profile = extract_investment_profile(context)
+risk_payload = risk_eval(investment_profile)
+payload = create_payload(risk_payload)
+portfolio = create_portfolio(payload)
+print(portfolio)
 # portfolio = [("AAPL", 1), ("MSFT", 1), ("NVDA", 1), ("PFE", 1)]
  
 # success, response = send_portfolio(portfolio)
