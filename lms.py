@@ -119,7 +119,7 @@ DO NOT WRITE ANYTHING OTHER THAN THE JSON OUTPUT!!!.
         except json.JSONDecodeError as e:
             print("Failed to parse JSON:", e)
         print("!!!!!!!!!!!!!")
-        print(cleaned[5:])
-        return cleaned[5:]
+        print(cleaned[7:])
+        return cleaned[7:]
     else:
         print("Failed to get a response from the server.")

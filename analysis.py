@@ -63,12 +63,43 @@ def portfolio_volatility(rets_df: pd.DataFrame, weights: list[float]):
     else:
         return np.array(np.sqrt(np.sum(weights * (weights @ cov_matrix), axis=1)))
 
-def generate_weights(rets_df: pd.DataFrame, I: int) -> np.ndarray:
-    """Generate I sets of random weights that sum to 1"""
+def generate_weights(rets_df: pd.DataFrame, I: int):
+    """Generate I sets of weights at once"""
     noa = rets_df.shape[1]  # number of assets
-    weights = np.random.random((I, noa))
-    # Normalize each row to sum to 1
-    weights /= weights.sum(axis=1)[:, np.newaxis]
+    min_alloc = 0.5 / noa
+    max_alloc = 2 / noa
+    weights = np.zeros((I, noa))
+    remaining = np.ones(I)
+
+    for i in range(noa - 1):
+        # Calculate valid ranges for all simulations at once
+        min_for_this = np.maximum(
+            min_alloc,
+            remaining - (noa - i - 1) * max_alloc
+        )
+        max_for_this = np.minimum(
+            max_alloc,
+            remaining - (noa - i - 1) * min_alloc
+        )
+
+        # Generate weights for this asset for all simulations
+        weights[:, i] = np.random.uniform(
+            min_for_this, 
+            max_for_this
+        )
+        remaining -= weights[:, i]
+
+    # Set final weights
+    weights[:, -1] = remaining
+
+    # Return equal weights for any invalid combinations
+    invalid_mask = (
+        (weights < min_alloc).any(axis=1) | 
+        (weights > max_alloc).any(axis=1) |
+        ~np.isclose(weights.sum(axis=1), 1.0)
+    )
+    weights[invalid_mask] = np.full(noa, 1.0/noa)
+
     return weights
 
 def get_returns_range(rets_df: pd.DataFrame) -> tuple[float, float]:
