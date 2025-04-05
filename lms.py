@@ -47,15 +47,37 @@ def extract_investment_profile(input):
 Extract information from the investment profile above and condense into the JSON schema below. JSON output only.
 
 {
-    "name": string,
     "age": integer,
     "budget": integer,
     "investment_start": string,
     "investment_end": string,
-    "hobbies": [string],
     "avoids": [string],
-    "employer": string or null,
     "salary": number or null
+}
+"""
+
+    print(f"Prompt: {prompt}\n")
+    
+    result = generate_text(prompt)
+    
+    if result:
+        print(f"Generation time: {result['generation_time']:.2f} seconds\n")
+        content = extract_content(result)
+        print(content)
+        return content
+    else:
+        print("Failed to get a response from the server.")
+
+def create_payload():
+    prompt = f"""{input}
+
+Suggest 5-15 unique S&P500 tickers. Suggest less tickers if the risk is high. Condense into the JSON schema below. JSON output only.
+
+{
+    "tickers": [string],
+    "budget": integer,
+    "investment_start": string,
+    "investment_end": string
 }
 """
 
