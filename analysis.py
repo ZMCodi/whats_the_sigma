@@ -42,20 +42,20 @@ def get_log_rets(prices_df: pd.DataFrame) -> pd.DataFrame:
 
 def portfolio_returns(rets_df: pd.DataFrame, weights: list[float]):
     weights = np.array(weights)
-    weights /= weights.sum()  # Normalize weights
 
     rets = np.array(rets_df.mean())
     if weights.ndim == 1:
+        weights /= weights.sum()  # Normalize weights
         return float(np.sum(rets * weights) * 252)
     else:
         return np.sum(rets * weights, axis=1) * 252
 
 def portfolio_volatility(rets_df: pd.DataFrame, weights: list[float]):
     weights = np.array(weights)
-    weights /= weights.sum()  # Normalize weights
 
     cov_matrix = rets_df.cov() * 252
     if weights.ndim == 1:
+        weights /= weights.sum()  # Normalize weights
         return float(np.sqrt(np.sum(weights * (weights @ cov_matrix))))
     else:
         return np.array(np.sqrt(np.sum(weights * (weights @ cov_matrix), axis=1)))
@@ -68,9 +68,17 @@ def generate_weights(rets_df: pd.DataFrame, I: int) -> np.ndarray:
     weights /= weights.sum(axis=1)[:, np.newaxis]
     return weights
 
+def get_returns_range(rets_df: pd.DataFrame) -> tuple[float, float]:
+    """Get the range of returns for a set of weights"""
+    weights = generate_weights(rets_df, 1000)
+    returns = portfolio_returns(rets_df, weights)
+    return returns.min(), returns.max()
+
+
 if __name__ == "__main__":
     # Example usage
     tickers = ['AAPL', 'MSFT', 'NVDA']
     df = get_close(tickers, '2023-01-01', '2025-01-01')
     log_rets = get_log_rets(df)
-    print(generate_weights(log_rets, 10))
+    print(get_returns_range(log_rets))
+    # print(get_returns_range(log_rets))
