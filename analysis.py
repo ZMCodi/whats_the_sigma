@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import scipy.optimize as sco
 import math
+import json
 
 # Load environment variables from .env file
 load_dotenv()
@@ -119,17 +120,19 @@ def portfolio_for_volatility(rets_df: pd.DataFrame, target_vol: float):
 def shares_for_price(ticker: str, close_df: pd.DataFrame, price: float) -> float:
     return float(price / close_df[ticker].iloc[0])
 
-def create_portfolio(payload: dict) -> list[tuple[str, float]]:
+def create_portfolio(payload: str) -> list[tuple[str, float]]:
+    payload = json.loads(payload)
     # Get the log returns
-    close = get_close(payload['tickers'], payload['start_date'], payload['end_date'])
+    close = get_close(payload['tickers'], payload['investment_start'], payload['investment_end'])
     rets_df = get_log_rets(close)
 
     # Get the weights for the target volatility
-    weights = portfolio_for_volatility(rets_df, payload['target_vol'])
-    budget = payload['budget']
+    weights = portfolio_for_volatility(rets_df, payload['risk'])
+    budget = payload['budget'] - payload['budget'] * 0.1  # 10% for fees
 
     # Return formatted results
-    return [(ticker, shares_for_price(ticker, close, float(weight) * budget)) for ticker, weight in zip(rets_df.columns, weights) if weight > 1e-5]
+    res_list = [(ticker, shares_for_price(ticker, close, float(weight) * budget)) for ticker, weight in zip(rets_df.columns, weights) if weight > 1e-5]
+    return [{'ticker': ticker, 'quantity': int(shares)} for ticker, shares in res_list]
 
 if __name__ == "__main__":
     # Example usage

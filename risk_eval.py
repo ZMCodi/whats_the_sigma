@@ -3,6 +3,7 @@ import json
 import datetime
 
 def risk_eval(profile_dict):
+    profile_dict = json.loads(profile_dict)
     try:
         score = 0
         

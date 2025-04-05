@@ -2,7 +2,7 @@ import requests
 import json
 import time
 
-def generate_text(prompt, model="qwen/qwen2.5-0.5b-instruct", api_url="http://10.205.141.245:1234/v1/chat/completions"):
+def generate_text(prompt, model="qwen/qwen2.5-0.5b-instruct", api_url="http://localhost:1234/v1/chat/completions"):
     headers = {"Content-Type": "application/json"}
     
     payload = {
@@ -46,14 +46,14 @@ def extract_investment_profile(input):
 
 Extract information from the investment profile above and condense into the JSON schema below. JSON output only.
 
-{
+{{
     "age": integer,
     "budget": integer,
-    "investment_start": string,
-    "investment_end": string,
+    "investment_start": string (yyyy-mm-dd),
+    "investment_end": string (yyyy-mm-dd),
     "avoids": [string],
-    "salary": number or null
-}
+    "salary": number or None
+}}
 """
 
     print(f"Prompt: {prompt}\n")
@@ -61,24 +61,38 @@ Extract information from the investment profile above and condense into the JSON
     result = generate_text(prompt)
     
     if result:
-        print(f"Generation time: {result['generation_time']:.2f} seconds\n")
         content = extract_content(result)
-        print(content)
-        return content
+        import re
+
+        model_output = content
+
+        # Remove optional triple quotes or markdown-style code fences
+        # This regex removes leading/trailing ⁠ json,  ⁠ or '''json
+        cleaned = re.sub(r"^['\"⁠ ]*json['\" ⁠]*\s*|['\"`]*$", "", model_output.strip(), flags=re.IGNORECASE)
+
+        # Now parse the JSON string to a Python dictionary
+        try:
+            data = json.loads(cleaned)
+            print(data)
+        except json.JSONDecodeError as e:
+            print("Failed to parse JSON:", e)
+        print(f"Generation time: {result['generation_time']:.2f} seconds\n")
+        return cleaned[7:]
     else:
         print("Failed to get a response from the server.")
 
-def create_payload():
+def create_payload(input):
     prompt = f"""{input}
 
-Suggest 5-15 unique S&P500 tickers. Suggest less tickers if the risk is high. Condense into the JSON schema below. JSON output only.
-
-{
+Suggest appropriate number of tickers based on the risk number. It is a number from 0-1 with 1 being very very volatile. Try to diversify more if the risk index is low. Condense into the JSON schema below. JSON output only.
+DO NOT WRITE ANYTHING OTHER THAN THE JSON OUTPUT!!!.
+{{
     "tickers": [string],
     "budget": integer,
-    "investment_start": string,
-    "investment_end": string
-}
+    "investment_start": string (yyyy-mm-dd),
+    "investment_end": string (yyyy-mm-dd),
+    "risk": number (use risk from the input)
+}}
 """
 
     print(f"Prompt: {prompt}\n")
@@ -89,6 +103,23 @@ Suggest 5-15 unique S&P500 tickers. Suggest less tickers if the risk is high. Co
         print(f"Generation time: {result['generation_time']:.2f} seconds\n")
         content = extract_content(result)
         print(content)
-        return content
+        import re
+
+        model_output = content
+
+        # Remove optional triple quotes or markdown-style code fences
+        # This regex removes leading/trailing ⁠ json,  ⁠ or '''json
+        cleaned = re.sub(r"^['\"⁠ ]*json['\" ⁠]*\s*|['\"`]*$", "", model_output.strip(), flags=re.IGNORECASE)
+        print(f"Cleaned in create_payload: {cleaned[7:]}")
+
+        # Now parse the JSON string to a Python dictionary
+        try:
+            data = json.loads(cleaned)
+            print(data)
+        except json.JSONDecodeError as e:
+            print("Failed to parse JSON:", e)
+        print("!!!!!!!!!!!!!")
+        print(cleaned[5:])
+        return cleaned[5:]
     else:
         print("Failed to get a response from the server.")
