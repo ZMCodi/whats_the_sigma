@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import numpy as np
 import scipy.optimize as sco
+import math
 
 # Load environment variables from .env file
 load_dotenv()
@@ -75,7 +76,7 @@ def get_returns_range(rets_df: pd.DataFrame) -> tuple[float, float]:
     returns = portfolio_returns(rets_df, weights)
     return returns.min(), returns.max()
 
-def efficient_frontier(rets_df: pd.DataFrame):
+def efficient_frontier(rets_df: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     noa = rets_df.shape[1]  # number of assets
     eweights = np.array(noa * [1.0 / noa])
 
@@ -99,6 +100,19 @@ def efficient_frontier(rets_df: pd.DataFrame):
     weights = np.array(weights)
 
     return t_rets, t_vols, weights
+
+def find_nearest(array, value):
+    idx = np.searchsorted(array, value, side="left")
+    if idx > 0 and (idx == len(array) or math.fabs(value - array[idx - 1]) < math.fabs(value - array[idx])):
+        return idx - 1
+    else:
+        return idx
+
+def portfolio_for_volatility(rets_df: pd.DataFrame, target_vol: float):
+    """Find the portfolio weights for a given target volatility"""
+    t_rets, t_vols, weights = efficient_frontier(rets_df)
+    idx = find_nearest(t_vols, target_vol)
+    return weights[idx]
 
 if __name__ == "__main__":
     # Example usage
