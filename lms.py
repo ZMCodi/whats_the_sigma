@@ -2,7 +2,7 @@ import requests
 import json
 import time
 
-def generate_text(prompt, model="qwen/qwen2.5-0.5b-instruct", api_url="http://localhost:1234/v1/chat/completions"):
+def generate_text(prompt, model="qwen/qwen2.5-0.5b-instruct", api_url="http://10.205.141.245:1234/v1/chat/completions"):
     headers = {"Content-Type": "application/json"}
     
     payload = {
