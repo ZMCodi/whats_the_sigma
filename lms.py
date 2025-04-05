@@ -1,6 +1,7 @@
 import requests
 import json
 import time
+import re
 
 def generate_text(prompt, model="qwen/qwen2.5-0.5b-instruct", api_url="http://localhost:1234/v1/chat/completions"):
     headers = {"Content-Type": "application/json"}
@@ -62,22 +63,19 @@ Extract information from the investment profile above and condense into the JSON
     
     if result:
         content = extract_content(result)
-        import re
 
         model_output = content
 
         # Remove optional triple quotes or markdown-style code fences
         # This regex removes leading/trailing ⁠ json,  ⁠ or '''json
-        cleaned = re.sub(r"^['\"⁠ ]*json['\" ⁠]*\s*|['\"`]*$", "", model_output.strip(), flags=re.IGNORECASE)
-
-        # Now parse the JSON string to a Python dictionary
+        match = re.search(r"\{.*\}", model_output, flags=re.DOTALL)
         try:
-            data = json.loads(cleaned)
-            print(data)
-        except json.JSONDecodeError as e:
+            content_dict = eval(match.group(0))
+            return content_dict
+        except (AttributeError, SyntaxError) as e:
             print("Failed to parse JSON:", e)
-        print(f"Generation time: {result['generation_time']:.2f} seconds\n")
-        return cleaned[7:]
+            return None
+            # Add logic to just move onto the next loop
     else:
         print("Failed to get a response from the server.")
 
@@ -85,7 +83,6 @@ def create_payload(input):
     prompt = f"""{input}
 
 Suggest appropriate number of tickers based on the risk number. It is a number from 0-1 with 1 being very very volatile. Try to diversify more if the risk index is low. Condense into the JSON schema below. JSON output only.
-DO NOT WRITE ANYTHING OTHER THAN THE JSON OUTPUT!!!.
 {{
     "tickers": [string],
     "budget": integer,
@@ -103,23 +100,18 @@ DO NOT WRITE ANYTHING OTHER THAN THE JSON OUTPUT!!!.
         print(f"Generation time: {result['generation_time']:.2f} seconds\n")
         content = extract_content(result)
         print(content)
-        import re
 
         model_output = content
 
         # Remove optional triple quotes or markdown-style code fences
         # This regex removes leading/trailing ⁠ json,  ⁠ or '''json
-        cleaned = re.sub(r"^['\"⁠ ]*json['\" ⁠]*\s*|['\"`]*$", "", model_output.strip(), flags=re.IGNORECASE)
-        print(f"Cleaned in create_payload: {cleaned[7:]}")
-
-        # Now parse the JSON string to a Python dictionary
+        match = re.search(r"\{.*\}", model_output, flags=re.DOTALL)
         try:
-            data = json.loads(cleaned)
-            print(data)
-        except json.JSONDecodeError as e:
+            content_dict = eval(match.group(0))
+            return content_dict
+        except (AttributeError, SyntaxError) as e:
             print("Failed to parse JSON:", e)
-        print("!!!!!!!!!!!!!")
-        print(cleaned[7:])
-        return cleaned[7:]
+            return None
+            # Add logic to just move onto the next loop
     else:
         print("Failed to get a response from the server.")
