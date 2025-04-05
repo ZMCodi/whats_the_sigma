@@ -60,10 +60,17 @@ def portfolio_volatility(rets_df: pd.DataFrame, weights: list[float]):
     else:
         return np.array(np.sqrt(np.sum(weights * (weights @ cov_matrix), axis=1)))
 
+def generate_weights(rets_df: pd.DataFrame, I: int) -> np.ndarray:
+    """Generate I sets of random weights that sum to 1"""
+    noa = rets_df.shape[1]  # number of assets
+    weights = np.random.random((I, noa))
+    # Normalize each row to sum to 1
+    weights /= weights.sum(axis=1)[:, np.newaxis]
+    return weights
 
 if __name__ == "__main__":
     # Example usage
     tickers = ['AAPL', 'MSFT', 'NVDA']
     df = get_close(tickers, '2023-01-01', '2025-01-01')
     log_rets = get_log_rets(df)
-    print(portfolio_volatility(log_rets, [0.5, 0.3, 0.2]))
+    print(generate_weights(log_rets, 10))
