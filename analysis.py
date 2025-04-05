@@ -111,28 +111,33 @@ def find_nearest(array, value):
 def portfolio_for_volatility(rets_df: pd.DataFrame, target_vol: float):
     """Find the portfolio weights for a given target volatility"""
     t_rets, t_vols, weights = efficient_frontier(rets_df)
+    vol_range = t_vols.max() - t_vols.min()
+    target_vol = (vol_range * target_vol) + t_vols.min()
     idx = find_nearest(t_vols, target_vol)
     return weights[idx]
 
-def results(payload) -> list[tuple[str, float]]:
+def shares_for_price(ticker: str, close_df: pd.DataFrame, price: float) -> float:
+    return float(price / close_df[ticker].iloc[0])
+
+def results(payload: dict) -> list[tuple[str, float]]:
     # Get the log returns
     close = get_close(payload['tickers'], payload['start_date'], payload['end_date'])
     rets_df = get_log_rets(close)
 
     # Get the weights for the target volatility
     weights = portfolio_for_volatility(rets_df, payload['target_vol'])
+    budget = payload['budget']
 
     # Return formatted results
-    return[(ticker, float(weight)) for ticker, weight in zip(rets_df.columns, weights) if weight > 1e-5]
+    return [(ticker, shares_for_price(ticker, close, float(weight) * budget)) for ticker, weight in zip(rets_df.columns, weights) if weight > 1e-5]
 
 if __name__ == "__main__":
     # Example usage
-    tickers = ['AAPL', 'MSFT', 'NVDA', 'TSLA', 'AMZN', 'GOOGL', 'META', 'NFLX']
-    df = get_close(tickers, '2023-01-01', '2025-01-01')
+    tickers = ['AAPL', 'ETSY', 'NVDA', 'TSLA', 'PYPL', 'GOOGL']
     print(results({
         'tickers': tickers,
-        'start_date': '2023-01-01',
-        'end_date': '2025-01-01',
-        'target_vol': 0.2
+        'start_date': '2019-08-09',
+        'end_date': '2022-02-14',
+        'target_vol': 0.2,
+        'budget': 18000
     }))
-    # print(get_returns_range(log_rets))
