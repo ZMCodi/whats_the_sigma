@@ -59,8 +59,15 @@ def risk_eval(profile_json):
     
     else:
         risk = "low"
-    
-    print(risk)
+
+    return (
+        {
+            "risk": risk,
+            "budget": budget,
+            "investment_start": start_datetime,
+            "investment_end": end_datetime,
+        }
+    )
 
 
 
