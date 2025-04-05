@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 import pandas as pd
 import numpy as np
+import scipy.optimize as sco
 
 # Load environment variables from .env file
 load_dotenv()
@@ -70,10 +71,34 @@ def generate_weights(rets_df: pd.DataFrame, I: int) -> np.ndarray:
 
 def get_returns_range(rets_df: pd.DataFrame) -> tuple[float, float]:
     """Get the range of returns for a set of weights"""
-    weights = generate_weights(rets_df, 1000)
+    weights = generate_weights(rets_df, 1_000)
     returns = portfolio_returns(rets_df, weights)
     return returns.min(), returns.max()
 
+def efficient_frontier(rets_df: pd.DataFrame):
+    noa = rets_df.shape[1]  # number of assets
+    eweights = np.array(noa * [1.0 / noa])
+
+    def min_vol(weights):
+       return portfolio_volatility(rets_df, weights)
+
+    min_rets, max_rets = get_returns_range(rets_df)
+
+    t_rets = np.linspace(min_rets, max_rets, 50)
+    t_vols = []
+    weights = []
+    for target_ret in t_rets:
+        constraints = ({'type': 'eq', 'fun': lambda x: portfolio_returns(rets_df, x) - target_ret},
+                        {'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
+        bounds = tuple((0, 1) for _ in range(noa))
+        result = sco.minimize(min_vol, eweights, method='SLSQP', bounds=bounds, constraints=constraints)
+        weights.append(result['x'])
+        t_vols.append(result['fun'])
+
+    t_vols = np.array(t_vols)
+    weights = np.array(weights)
+
+    return t_rets, t_vols, weights
 
 if __name__ == "__main__":
     # Example usage
