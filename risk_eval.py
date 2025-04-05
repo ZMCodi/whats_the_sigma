@@ -52,13 +52,13 @@ def risk_eval(profile_json):
             score += 1
     
     if score >= 3:
-        risk = "high"
+        risk = 1
     
     if score > 0:
-        risk = "medium"
+        risk = 0.6666
     
     else:
-        risk = "low"
+        risk = 0.3333
 
     return (
         {
