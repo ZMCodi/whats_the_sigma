@@ -2,24 +2,52 @@ import requests
 import json
 import time
 import re
+import os
+from dotenv import load_dotenv
 
-def generate_text(prompt, model="qwen/qwen2.5-0.5b-instruct", api_url="http://localhost:1234/v1/chat/completions"):
+# Load environment variables from .env file
+load_dotenv()
+
+def generate_text(prompt, model="gemini-2.0-flash-lite", api_url="https://generativelanguage.googleapis.com/v1beta/models"):
+    # Get API key from environment variable loaded via dotenv
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY not found in .env file")
+    
+    # Construct the full API URL with the model and API key
+    full_api_url = f"{api_url}/{model}:generateContent?key={api_key}"
+    
     headers = {"Content-Type": "application/json"}
     
     payload = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": "You are a financial advisor at the biggest investment firm in the world. You are very good at creating portfolios."},
-            {"role": "user", "content": prompt}
+        "contents": [
+            {
+                "role": "user",
+                "parts": [
+                    {
+                        "text": "You are a financial advisor at the biggest investment firm in the world. You are very good at creating portfolios."
+                    }
+                ]
+            },
+            {
+                "role": "user",
+                "parts": [
+                    {
+                        "text": prompt
+                    }
+                ]
+            }
         ],
-        "temperature": 0.6,
-        "max_tokens": 512
+        "generationConfig": {
+            "temperature": 0.6,
+            "maxOutputTokens": 512,
+        }
     }
     
     start_time = time.time()
     
     try:
-        response = requests.post(api_url, headers=headers, data=json.dumps(payload))
+        response = requests.post(full_api_url, headers=headers, data=json.dumps(payload))
         response.raise_for_status()
         
         end_time = time.time()
@@ -32,14 +60,16 @@ def generate_text(prompt, model="qwen/qwen2.5-0.5b-instruct", api_url="http://lo
             "generation_time": generation_time
         }
     except requests.exceptions.RequestException as e:
-        print(f"Error making request to LM Studio server: {e}")
+        print(f"Error making request to Gemini API: {e}")
         return None
 
 def extract_content(response):
     if response and "response" in response:
         try:
-            return response["response"]["choices"][0]["message"]["content"]
-        except (KeyError, IndexError):
+            # Gemini API response structure is different from the previous API
+            return response["response"]["candidates"][0]["content"]["parts"][0]["text"]
+        except (KeyError, IndexError) as e:
+            print(f"Error extracting content: {e}")
             return "Error: Could not extract content from response"
     return "Error: No valid response received"
 
