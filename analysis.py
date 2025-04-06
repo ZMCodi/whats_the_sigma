@@ -23,6 +23,19 @@ def get_close(tickers: list[str], start_date: str, end_date: str) -> pd.DataFram
         raise ValueError("Start date must be after 2008-01-01")
     if 'BRK.B' in tickers:
         tickers.remove('BRK.B')
+    if 'NEE' in tickers:
+        tickers.remove('NEE')
+    if 'GOOGL' in tickers:
+        tickers.remove('GOOGL')
+        tickers.append('GOOG')
+    if 'RTX' in tickers:
+        tickers.remove('RTX')
+    if 'META' in tickers:
+        tickers.remove('META')
+    if 'BKNG' in tickers:
+        tickers.remove('BKNG')
+    if 'TFC' in tickers:
+        tickers.remove('TFC')
     ticker_str = "(" + ", ".join([f"'{ticker}'" for ticker in tickers]) + ")"
 
     with pg.connect(**DB_CONFIG) as conn:
@@ -67,43 +80,51 @@ def portfolio_volatility(rets_df: pd.DataFrame, weights: list[float]):
     else:
         return np.array(np.sqrt(np.sum(weights * (weights @ cov_matrix), axis=1)))
 
-def generate_weights(rets_df: pd.DataFrame, I: int):
-    """Generate I sets of weights at once"""
+# def generate_weights(rets_df: pd.DataFrame, I: int):
+#     """Generate I sets of weights at once"""
+#     noa = rets_df.shape[1]  # number of assets
+#     min_alloc = 0.5 / noa
+#     max_alloc = 2 / noa
+#     weights = np.zeros((I, noa))
+#     remaining = np.ones(I)
+
+#     for i in range(noa - 1):
+#         # Calculate valid ranges for all simulations at once
+#         min_for_this = np.maximum(
+#             min_alloc,
+#             remaining - (noa - i - 1) * max_alloc
+#         )
+#         max_for_this = np.minimum(
+#             max_alloc,
+#             remaining - (noa - i - 1) * min_alloc
+#         )
+
+#         # Generate weights for this asset for all simulations
+#         weights[:, i] = np.random.uniform(
+#             min_for_this, 
+#             max_for_this
+#         )
+#         remaining -= weights[:, i]
+
+#     # Set final weights
+#     weights[:, -1] = remaining
+
+#     # Return equal weights for any invalid combinations
+#     invalid_mask = (
+#         (weights < min_alloc).any(axis=1) | 
+#         (weights > max_alloc).any(axis=1) |
+#         ~np.isclose(weights.sum(axis=1), 1.0)
+#     )
+#     weights[invalid_mask] = np.full(noa, 1.0/noa)
+
+#     return weights
+
+def generate_weights(rets_df: pd.DataFrame, I: int) -> np.ndarray:
+    """Generate I sets of random weights that sum to 1"""
     noa = rets_df.shape[1]  # number of assets
-    min_alloc = 0.5 / noa
-    max_alloc = 2 / noa
-    weights = np.zeros((I, noa))
-    remaining = np.ones(I)
-
-    for i in range(noa - 1):
-        # Calculate valid ranges for all simulations at once
-        min_for_this = np.maximum(
-            min_alloc,
-            remaining - (noa - i - 1) * max_alloc
-        )
-        max_for_this = np.minimum(
-            max_alloc,
-            remaining - (noa - i - 1) * min_alloc
-        )
-
-        # Generate weights for this asset for all simulations
-        weights[:, i] = np.random.uniform(
-            min_for_this, 
-            max_for_this
-        )
-        remaining -= weights[:, i]
-
-    # Set final weights
-    weights[:, -1] = remaining
-
-    # Return equal weights for any invalid combinations
-    invalid_mask = (
-        (weights < min_alloc).any(axis=1) | 
-        (weights > max_alloc).any(axis=1) |
-        ~np.isclose(weights.sum(axis=1), 1.0)
-    )
-    weights[invalid_mask] = np.full(noa, 1.0/noa)
-
+    weights = np.random.random((I, noa))
+    # Normalize each row to sum to 1
+    weights /= weights.sum(axis=1)[:, np.newaxis]
     return weights
 
 def get_returns_range(rets_df: pd.DataFrame) -> tuple[float, float]:
@@ -123,7 +144,7 @@ def efficient_frontier(rets_df: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, n
     min_alloc = 0
     max_alloc = 1
 
-    t_rets = np.linspace(min_rets, max_rets, 50)
+    t_rets = np.linspace(min_rets, max_rets, 15)
     t_vols = []
     weights = []
     for target_ret in t_rets:
@@ -166,13 +187,13 @@ def create_portfolio(payload: str) -> list[tuple[str, float]]:
     # Get the weights for the target volatility
     weights = portfolio_for_volatility(rets_df, payload['risk'])
     print(f"Portfolio weights: {weights}")
-    budget = payload['budget'] - payload['budget'] * 0.1  # 10% safety buffer
+    budget = payload['budget'] - payload['budget'] * 0.5  # 10% safety buffer
 
     # Return formatted results
     res_list = [(ticker, shares_for_price(ticker, close, float(weight) * budget)) for ticker, weight in zip(rets_df.columns, weights) if weight > 1e-5]
     print(close.iloc[0])
     print(f"TOTAL SPENDING: {sum([shares * close.iloc[0][ticker] for ticker, shares in res_list])}")
-    return [{'ticker': ticker, 'quantity': math.floor(shares)} for ticker, shares in res_list if shares >= 1]
+    return [{'ticker': ticker, 'quantity': math.floor(shares * 0.9)} for ticker, shares in res_list if shares >= 1.2]
 
 if __name__ == "__main__":
     # Example usage

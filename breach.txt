@@ -1,0 +1,16 @@
+Payload:  {'tickers': ['AAPL', 'MSFT', 'JNJ', 'XOM', 'PG', 'AMZN', 'GOOGL'], 'budget': 2070, 'investment_start': '2012-07-21', 'investment_end': '2025-04-06', 'risk': 0.6}
+Portfolio weights: [0.1049465  0.19218297 0.09287442 0.11205408 0.32155586 0.17638617
+ 0.        ]
+ticker
+AAPL     21.56536
+AMZN     11.30050
+GOOGL    15.40315
+JNJ      68.11000
+MSFT     29.28000
+PG       64.39000
+XOM      85.21000
+Name: 2012-07-23, dtype: float64
+TOTAL SPENDING: 1448.9999999999995
+HERE!!!!! [{'ticker': 'AAPL', 'quantity': 6}, {'ticker': 'AMZN', 'quantity': 22}, {'ticker': 'GOOGL', 'quantity': 7}, {'ticker': 'JNJ', 'quantity': 2}, {'ticker': 'MSFT', 'quantity': 14}, {'ticker': 'PG', 'quantity': 3}]
+Time taken: 1.4671826362609863
+Error: Error - something went wrong when requesting [CODE: 418]: Error encountered while evaluation of input: [invalid ticker(s) passed in [['AAPL', 6], ['AMZN', 22], ['GOOGL', 7], ['JNJ', 2], ['MSFT', 14], ['PG', 3]]. The error here either means you have passed in invalid ticker(s) OR the tickers are not valid for the time range provided. Please ensure that the ticker(s) is (are) trading publicly during the ENTIRE time frame provided. Additionally, make sure you are using the CANNONICAL TICKER. Problematic Stocks: ['GOOGL']]. This is most likely a you problem

@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import requests
 
 from analysis import create_portfolio
-from lms import create_payload
+from lms import create_payload, create_payload_fast
 
 load_dotenv()
  
@@ -88,6 +88,7 @@ def send_portfolio(weighted_stocks):
     data = weighted_stocks
     return send_post_request("/submit", data=data)
  
+import time
 
 
 if __name__ == '__main__':
@@ -102,14 +103,17 @@ if __name__ == '__main__':
             if not success:
                 print(f"Error: {context}")
             print(f"Context provided: ", context)
+            start = time.time()
             # context = "Alejandro Campbell is a 60-year-old who started investing on October 20th, 2008 and ended on January 21st, 2010. His hobbies are gardening and he avoids Tech stocks. He has a total budget of $942."
 
             # Maybe do something with the context to generate this?
-            payload = create_payload(context)
+            payload = create_payload_fast(context)
             print("Payload: ", payload)
             # print(type(investment_profile))
             portfolio = create_portfolio(payload)
             print(f'HERE!!!!! {portfolio}')
+            end = time.time()
+            print(f"Time taken: {end - start}")
             # portfolio = [("AAPL", 1), ("MSFT", 1), ("NVDA", 1), ("PFE", 1)]
 
             success, response = send_portfolio(portfolio)
@@ -130,7 +134,9 @@ if __name__ == '__main__':
     # if not success:
     #     print(f"Error: {context}")
     # print(f"Context provided: ", context)
-    # # context = "Alejandro Campbell is a 60-year-old who started investing on October 20th, 2008 and ended on January 21st, 2010. His hobbies are gardening and he avoids Tech stocks. He has a total budget of $942."
+    # import time
+    # start = time.time()
+    # context = "Alejandro Campbell is a 60-year-old who started investing on October 20th, 2008 and ended on January 21st, 2010. His hobbies are gardening and he avoids Tech stocks. He has a total budget of $942."
 
     # # Maybe do something with the context to generate this?
     # payload = create_payload(context)
@@ -138,7 +144,9 @@ if __name__ == '__main__':
     # # print(type(investment_profile))
     # portfolio = create_portfolio(payload)
     # print(portfolio)
-    # # portfolio = [("AAPL", 1), ("MSFT", 1), ("NVDA", 1), ("PFE", 1)]
+    # end = time.time()
+    # print(f"Time taken: {end - start}")
+    # portfolio = [("AAPL", 1), ("MSFT", 1), ("NVDA", 1), ("PFE", 1)]
 
     # success, response = send_portfolio(portfolio)
     # if not success:
