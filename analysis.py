@@ -19,12 +19,16 @@ DB_CONFIG = {
 
 def get_close(tickers: list[str], start_date: str, end_date: str) -> pd.DataFrame:
     # Convert Python list to SQL-friendly format: ('AAPL', 'MSFT')
+    if start_date < '2008-01-01':
+        raise ValueError("Start date must be after 2008-01-01")
+    if 'BRK.B' in tickers:
+        tickers.remove('BRK.B')
     ticker_str = "(" + ", ".join([f"'{ticker}'" for ticker in tickers]) + ")"
 
     with pg.connect(**DB_CONFIG) as conn:
         with conn.cursor() as cur:
             query = f"""
-                SELECT date, ticker, adj_close::float 
+                SELECT date, ticker, close::float 
                 FROM daily
                 WHERE ticker IN {ticker_str}
                 AND date BETWEEN '{start_date}' AND '{end_date}'
@@ -116,6 +120,8 @@ def efficient_frontier(rets_df: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, n
        return portfolio_volatility(rets_df, weights)
 
     min_rets, max_rets = get_returns_range(rets_df)
+    min_alloc = 0
+    max_alloc = 1
 
     t_rets = np.linspace(min_rets, max_rets, 50)
     t_vols = []
@@ -123,7 +129,7 @@ def efficient_frontier(rets_df: pd.DataFrame) -> tuple[np.ndarray, np.ndarray, n
     for target_ret in t_rets:
         constraints = ({'type': 'eq', 'fun': lambda x: portfolio_returns(rets_df, x) - target_ret},
                         {'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
-        bounds = tuple((0, 1) for _ in range(noa))
+        bounds = tuple((min_alloc, max_alloc) for x in range(noa))
         result = sco.minimize(min_vol, eweights, method='SLSQP', bounds=bounds, constraints=constraints)
         weights.append(result['x'])
         t_vols.append(result['fun'])
@@ -159,11 +165,14 @@ def create_portfolio(payload: str) -> list[tuple[str, float]]:
 
     # Get the weights for the target volatility
     weights = portfolio_for_volatility(rets_df, payload['risk'])
-    budget = payload['budget'] - payload['budget'] * 0.1  # 10% for fees
+    print(f"Portfolio weights: {weights}")
+    budget = payload['budget'] - payload['budget'] * 0.1  # 10% safety buffer
 
     # Return formatted results
     res_list = [(ticker, shares_for_price(ticker, close, float(weight) * budget)) for ticker, weight in zip(rets_df.columns, weights) if weight > 1e-5]
-    return [{'ticker': ticker, 'quantity': int(shares)} for ticker, shares in res_list]
+    print(close.iloc[0])
+    print(f"TOTAL SPENDING: {sum([shares * close.iloc[0][ticker] for ticker, shares in res_list])}")
+    return [{'ticker': ticker, 'quantity': math.floor(shares)} for ticker, shares in res_list if shares >= 1]
 
 if __name__ == "__main__":
     # Example usage

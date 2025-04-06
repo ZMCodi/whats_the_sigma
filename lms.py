@@ -25,7 +25,7 @@ def generate_text(prompt, model="gemini-2.0-flash-lite", api_url="https://genera
                 "role": "user",
                 "parts": [
                     {
-                        "text": "You are a financial advisor at the biggest investment firm in the world. You are very good at creating portfolios."
+                        "text": "You are a financial advisor at the biggest investment firm in the world. You are very good at creating portfolios. You should only output JSON. Do not add any other text."
                     }
                 ]
             },
@@ -40,7 +40,7 @@ def generate_text(prompt, model="gemini-2.0-flash-lite", api_url="https://genera
         ],
         "generationConfig": {
             "temperature": 0.6,
-            "maxOutputTokens": 512,
+            "maxOutputTokens": 2048,
         }
     }
     
@@ -86,14 +86,15 @@ Based on this, you will determine the client's investment portfolio. Here are so
 6. The more risk averse the client is, the more they should avoid volatile sectors.
 7. Pay attention to the sectors the customer explicitly wants to avoid.
 8. The risk index is a number from 0-1 with 1 being very very volatile. Choose an appropriate index for the client.
-9. Don't be afraid to suggest a lot of tickers (10+) if the risk index is low and budget is large enough
+9. Don't be afraid to suggest a lot of tickers (5+) if the risk index is low and budget is large enough.
 10. Take into account the stock behavior within the client's investment timeframe.
+11. Only give tickers that are traded during the investment timeframe.
 
-Based on this, create a JSON schema with the following fields. DO NOT FORGET ANY FIELDS:
+Based on this, create a JSON schema with the following fields. DO NOT FORGET ANY FIELDS. MAKE SURE YOU PARSE THE DATES CORRECTLY.:
 
 {{
     "tickers": list of tickers that the client should invest in based on the guidelines above,
-    "budget": integer,
+    "budget": integer or None if unspecified,
     "investment_start": string (yyyy-mm-dd),
     "investment_end": string (yyyy-mm-dd),
     "risk": number from 0-1 which is the risk index of the client
