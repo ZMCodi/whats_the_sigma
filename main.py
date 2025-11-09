@@ -8,7 +8,7 @@ from lms import create_payload, create_payload_fast
 
 load_dotenv()
  
-URL = "mts-prism.com"
+URL = "www.prism-challenge.com"
 PORT = 8082
  
 # Please do NOT share this information anywhere, unless you want your team to be cooked.
@@ -92,12 +92,15 @@ import time
 
 
 if __name__ == '__main__':
-    while (True):
+    loop_count = 0
+    while True:
         try:
-            success, information = get_my_current_information()
-            if not success:
-                print(f"Error: {information}")
-            print(f"Team information: ", information)
+            if loop_count % 10 == 0:
+                success, information = get_my_current_information()
+                if not success:
+                    print(f"Error: {information}")
+                print(f"Team information: ", information)
+                loop_count = 0
 
             success, context = get_context()
             if not success:
@@ -107,7 +110,8 @@ if __name__ == '__main__':
             # context = "Alejandro Campbell is a 60-year-old who started investing on October 20th, 2008 and ended on January 21st, 2010. His hobbies are gardening and he avoids Tech stocks. He has a total budget of $942."
 
             # Maybe do something with the context to generate this?
-            payload = create_payload_fast(context)
+            # payload = create_payload_fast(context)
+            payload = create_payload(context)
             print("Payload: ", payload)
             # print(type(investment_profile))
             portfolio = create_portfolio(payload)
@@ -120,9 +124,11 @@ if __name__ == '__main__':
             if not success:
                 print(f"Error: {response}")
             print(f"Evaluation response: ", response)
+            loop_count += 1
         except KeyboardInterrupt:
             break
         except Exception as e:
+            print(e)
             continue
 
     # success, information = get_my_current_information()

@@ -14,13 +14,15 @@ load_dotenv()
 DB_CONFIG = {
     'dbname': os.getenv('DB_NAME'),
     'user': os.getenv('DB_USER'),
-    'password': os.getenv('DB_PASSWORD')
+    'password': os.getenv('DB_PASSWORD'),
+    'host': 'localhost',
+    'port': 5432
 }
 
 def get_close(tickers: list[str], start_date: str, end_date: str) -> pd.DataFrame:
     # Convert Python list to SQL-friendly format: ('AAPL', 'MSFT')
-    if start_date < '2008-01-01':
-        raise ValueError("Start date must be after 2008-01-01")
+    if start_date < '2005-01-01':
+        raise ValueError("Start date must be after 2005-01-01")
     if 'BRK.B' in tickers:
         tickers.remove('BRK.B')
     if 'NEE' in tickers:
@@ -186,22 +188,16 @@ def create_portfolio(payload: str) -> list[tuple[str, float]]:
 
     # Get the weights for the target volatility
     weights = portfolio_for_volatility(rets_df, payload['risk'])
-    print(f"Portfolio weights: {weights}")
-    budget = payload['budget'] - payload['budget'] * 0.5  # 10% safety buffer
+    # print(f"Portfolio weights: {weights}")
+    budget = payload['budget'] - payload['budget'] * 0.1  # 10% safety buffer
 
     # Return formatted results
     res_list = [(ticker, shares_for_price(ticker, close, float(weight) * budget)) for ticker, weight in zip(rets_df.columns, weights) if weight > 1e-5]
-    print(close.iloc[0])
+    # print(close.iloc[0])
     print(f"TOTAL SPENDING: {sum([shares * close.iloc[0][ticker] for ticker, shares in res_list])}")
     return [{'ticker': ticker, 'quantity': math.floor(shares * 0.9)} for ticker, shares in res_list if shares >= 1.2]
 
 if __name__ == "__main__":
     # Example usage
     tickers = ['AAPL', 'ETSY', 'NVDA', 'TSLA', 'PYPL', 'GOOGL']
-    print(create_portfolio({
-        'tickers': tickers,
-        'start_date': '2019-08-09',
-        'end_date': '2022-02-14',
-        'target_vol': 0.2,
-        'budget': 18000
-    }))
+    print(create_portfolio({'tickers': ['NEE', 'DUK', 'SO', 'PEP', 'KO', 'CL', 'COST', 'WMT', 'KMB', 'PG', 'MCD', 'LOW', 'HD'], 'budget': 46246, 'investment_start': '2022-06-20', 'investment_end': '2023-09-10', 'risk': 0.2}))

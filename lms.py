@@ -79,15 +79,15 @@ def create_payload(input):
 
 The information above is an investment profile from a potential client. What you have to do is understand the client's risk profile.
 Based on this, you will determine the client's investment portfolio. Here are some guidelines:
-1. Only S&P500 stocks are allowed.
+1. Only S&P100 and FTSE100 stocks are allowed
 2. Take into account the client's age, budget, salary and other information.
 3. Create a list of tickers that are appropriate for the client.
 4. The more risk averse the client is, the more diversified the portfolio should be in terms of quantity and sector exposure.
 5. The more risk averse the client is, the less volatile the stocks should be.
 6. The more risk averse the client is, the more they should avoid volatile sectors.
 7. DO NOT LIST TICKERS IN SECTORS THAT THE CLIENT EXPLICITLY MENTIONED TO AVOID.
-8. The risk index is a number from 0-1 with 1 being very very volatile. Choose an appropriate index for the client.
-9. Don't be afraid to suggest a lot of tickers (10+) if the risk index is low and budget is large enough.
+8. The risk index is a number from 0-1 with 1 being very very volatile. Choose an appropriate index for the client. Be less conservative
+9. Suggest 8-15 tickers that did well during the client's time frame if the budget is large enough
 10. Take into account the stock behavior within the client's investment timeframe.
 11. Only give tickers that are traded during the investment timeframe.
 
@@ -102,9 +102,10 @@ Based on this, create a JSON schema with the following fields. DO NOT FORGET ANY
 }}
 """
 
-    print(f"Prompt: {prompt}\n")
+    # print(f"Prompt: {prompt}\n")
     
     result = generate_text(prompt)
+    print(f"Generation time: {result["generation_time"]}")
     
     if result:
         content = extract_content(result)
